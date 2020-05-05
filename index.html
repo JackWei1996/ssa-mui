@@ -1,0 +1,420 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.css" rel="stylesheet" />
+		<script src="js/app.js"></script>
+		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=CTItIOB2FdSFsDlRRmh6irRFhVgnqKqb"></script> 
+		<script type="text/javascript" src="http://developer.baidu.com/map/jsdemo/demo/convertor.js"></script> 
+	</head>
+
+	<body>
+		<script src="js/mui.js"></script>
+		<script type="text/javascript">
+			
+			var cid = localStorage.getItem("cid");
+	
+			mui.init({
+			  pullRefresh : {
+				container:"#refreshContainer",//下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+				down : {
+				  style:'circle',//必选，下拉刷新样式，目前支持原生5+ ‘circle’ 样式
+				  color:'#2BD009', //可选，默认“#2BD009” 下拉刷新控件颜色
+				  height:'50px',//可选,默认50px.下拉刷新控件的高度,
+				  range:'100px', //可选 默认100px,控件可下拉拖拽的范围
+				  offset:'0px', //可选 默认0px,下拉刷新控件的起始位置
+				  auto: true,//可选,默认false.首次加载自动上拉刷新一次
+				  callback :csh() //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+				}
+			  }
+			});
+			
+			mui.plusReady(function() {
+				var notise;//  /jz/notices	
+				
+				mui("#notes").on('tap', 'li', function(){
+					var html = this.innerHTML;
+					var t = html.split('<p class="mui-ellipsis">')[0].split('<div class="mui-media-body">')[1];
+					var c = html.split('<p class="mui-ellipsis">')[1].split('</p>')[0];
+					var sj = html.split('<p class="mui-ellipsis shijian">')[1].split('</p>')[0];
+					mui.openWindow({
+						url:'xq.html',
+						id:'xq.html',
+						extras:{
+							title: t,
+							content: c,
+							shijian: sj
+						}
+					});
+				});
+				sy();
+				xy();
+				
+				var longitude, latitude; 
+				plus.geolocation.getCurrentPosition(translatePoint, function(e) { 
+					mui.toast("异常:" + e.message); 
+				}); 
+
+				function translatePoint(position) { 
+					var currentLon = position.coords.longitude; 
+					var currentLat = position.coords.latitude; 
+					
+					console.log(currentLon)
+					console.log(currentLat)
+					
+					var gpsPoint = new BMap.Point(currentLon, currentLat); 
+					BMap.Convertor.translate(gpsPoint, 2, initMap); //坐标转换 
+				} 
+
+				function initMap(point) { 
+					map = new BMap.Map("container"); //创建地图 
+					map.addControl(new BMap.NavigationControl()); 
+					map.addControl(new BMap.ScaleControl()); 
+					map.addControl(new BMap.OverviewMapControl()); 
+					map.centerAndZoom(point, 15); 
+					map.addOverlay(new BMap.Marker(point)); 
+
+				} 
+			});
+			
+			
+			function csh(){
+				sy();
+				xy();
+			}
+			
+			function tc(){
+				localStorage.removeItem("account");
+				localStorage.removeItem("password");
+				mui.openWindow({
+					url:'login.html',
+					id:'login.html'
+				});
+				
+				mui.ajax(ip+'/logout',{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；   
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					mui.toast("退出成功！");
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					mui.toast("退出成功！");
+					return 0;
+				}
+				});
+			}
+			function add0(m){return m<10?'0'+m:m }
+			function formatTime(shijianchuo){
+				
+				console.log(shijianchuo)
+				//shijianchuo是整数，否则要parseInt转换
+				var time = new Date(shijianchuo);
+				var y = time.getFullYear();
+				var m = time.getMonth()+1;
+				var d = time.getDate();
+				var h = time.getHours();
+				var mm = time.getMinutes();
+				var s = time.getSeconds();
+				return y+'-'+add0(m)+'-'+add0(d)+' '+add0(h)+':'+add0(mm)+':'+add0(s);
+			}
+			
+			function sy(){
+				mui.ajax(ip+'/user/notice/getAll',{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；   
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					var nt = document.getElementById("notes");
+					var html = "";
+					
+					for (i=0; i<data.length; i++) {
+						console.log(data)
+						html += '<li class="mui-table-view-cell mui-media">'+
+						'<a href="javascript:;">'+
+							'<img class="mui-media-object mui-pull-left" src="imgs/tubiao/144.png">'+
+							'<div class="mui-media-body">'+
+								data[i].title+
+								'<p class="mui-ellipsis">'+data[i].content+'</p>'+
+								'<p class="mui-ellipsis shijian">'+data[i].createTime+'</p>'+
+							'</div>'+
+						'</a>'+
+					'</li>';
+					}
+					nt.innerHTML = html;
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					mui.toast("服务器错误！");
+					return 0;
+				}
+				});
+			}
+			
+			function xy(){
+				var a = localStorage.getItem("account");				
+				mui.ajax(ip+'/jz/xy?userId='+a,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					var nt = document.getElementById("xyqk");
+					var html = "";
+					if("undefined" == typeof data.cName){ 
+						data.cName = "";
+					}
+					if("undefined" == typeof data.className){ 
+						data.className = "";
+					}
+					if("undefined" == typeof data.banZhuRen){ 
+						data.banZhuRen = "";
+					}
+					if("undefined" == typeof data.banZhuRenHao){ 
+						data.banZhuRenHao = "";
+					}
+					if("undefined" == typeof data.zao){ 
+						data.zao = "";
+					}
+					if("undefined" == typeof data.wu){ 
+						data.wu = "";
+					}
+					if("undefined" == typeof data.wan){ 
+						data.wan = "";
+					}
+					if("undefined" == typeof data.qiandao){ 
+						data.qiandao = "";
+					}
+					if("undefined" == typeof data.shangke){ 
+						data.shangke = "";
+					}
+					if("undefined" == typeof data.shangkeLaoShi){ 
+						data.shangkeLaoShi = "";
+					}
+					if("undefined" == typeof data.qiantui){ 
+						data.qiantui = "";
+					}
+					html+='<li class="mui-table-view-cell"><b>'+data.cName+'同学</b></li>'+
+						'<li class="mui-table-view-cell">班级：'+data.className+'</li>'+
+						'<li class="mui-table-view-cell">班主任：'+data.banZhuRen+' '+data.banZhuRenHao+'</li>'+
+						'<li class="mui-table-view-cell">今日早餐是：'+data.zao+'</li>'+
+						'<li class="mui-table-view-cell">今日午餐是：'+data.wu+'</li>'+
+						'<li class="mui-table-view-cell">今日晚餐是：'+data.wan+'</li>'+
+						'<li class="mui-table-view-cell">签到时间：'+data.qiandao+'</li>'+
+						'<li class="mui-table-view-cell">现在正在上：'+data.shangke+'，任课老师：'+data.shangkeLaoShi+'</li>'+
+						'<li class="mui-table-view-cell">签退时间：'+data.qiantui+'</li>';
+					
+					nt.innerHTML = html;
+					
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					mui.toast("服务器错误！");
+					return 0;
+				}
+				});
+			}
+			
+			function getCid(){
+				var a = localStorage.getItem("account");
+				mui.ajax(ip+'/jz/sub?userId='+a,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					if(data!=null){
+						cid = data.id;
+						localStorage.setItem("cid", cid);
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					mui.toast("服务器错误！");
+					return 0;
+				}
+				});
+			}
+			
+		function qiandao(){
+			if(cid==null || cid=="null"){
+				getCid();
+			}
+			cid = localStorage.getItem("cid");
+			if(cid!=null && cid!="null"){
+				mui.ajax(ip+"/jz/sigin?uid="+cid+"&type=1", {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: 10000, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded'
+					},
+					success: function(data) {
+						mui.toast("签到成功");
+					},
+					error: function(xhr, type, errorThrown) {
+						//异常处理；
+						mui.toast("签到成功");
+						return 0;
+					}
+				});
+			}else{
+				mui.toast("该用户没有孩子，无法签到");
+			}
+		}
+		
+		function qiantui(){
+			if(cid==null || cid=="null"){
+				getCid();
+			}
+			cid = localStorage.getItem("cid");
+			if(cid!=null && cid!="null"){
+				mui.ajax(ip+"/jz/sigin?uid="+cid+"&type=2", {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: 10000, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded'
+					},
+					success: function(data) {
+						mui.toast("签退成功");
+					},
+					error: function(xhr, type, errorThrown) {
+						//异常处理；
+						mui.toast("签退成功");
+						return 0;
+					}
+				});
+			}else{
+				mui.toast("该用户没有孩子，无法签退");
+			}
+		}
+		
+		</script>
+		<header class="mui-bar mui-bar-nav">
+			<h1 class="mui-title">智能运动</h1>
+		</header>
+
+		<nav class="mui-bar mui-bar-tab">
+			<a class="mui-tab-item mui-active" href="#sy">
+				<span class="mui-icon mui-icon-home"></span>
+				<span class="mui-tab-label">首页</span>
+			</a>
+			<a class="mui-tab-item" href="#qyd">
+				<span class="mui-icon mui-icon mui-icon-flag"></span>
+				<span class="mui-tab-label">去运动</span>
+			</a>
+			<a class="mui-tab-item" href="#byq">
+				<span class="mui-icon mui-icon-weixin"></span>	
+				<span class="mui-tab-label">步友圈</span>
+			</a>
+			<a class="mui-tab-item" href="#wd">
+				<span class="mui-icon mui-icon mui-icon-person"></span>
+				<span class="mui-tab-label">我的</span>
+			</a>
+		</nav>
+
+		<div class="mui-content">
+			<div id="sy" class="mui-control-content mui-active" onclick="sy();">
+				<ul class="mui-table-view" id="notes">
+					
+				</ul>
+			</div>
+
+			<div id="qyd" class="mui-control-content">
+				<ul class="mui-table-view mui-table-view-chevron">
+					<ul class="mui-table-view" id="ydlist">
+						<header class="mui-bar mui-bar-nav">
+						<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+						<h1 class="mui-title">签到打卡</h1>
+						</header>
+				
+						<div id="allmap">百度地图.....</div>
+						<input type="text" id="address" />
+					</ul>
+				</ul>
+			</div>
+			
+			<div id="byq" class="mui-control-content">
+				<ul class="mui-table-view mui-table-view-chevron">
+					<ul class="mui-table-view" id="pyqlist">
+						<li>
+							<div class="mui-card">
+								<!--页眉，放置标题-->
+								<div class="mui-card-header mui-card-media">
+									<img src="./imgs/tubiao/144.png" />
+									<div class="mui-media-body">
+										小M
+										<p>发表于 2020-05-05 15:30</p>
+									</div>
+								</div>
+								<!--内容区-->
+								<div class="mui-card-content">内容区内容区内容区内容区内容区内容区内容区内容区内容区</div>
+								<!--页脚，放置补充信息或支持的操作-->
+								<div class="mui-card-footer">页脚</div>
+							</div>
+						</li>
+						<li>
+							<div class="mui-card">
+								<!--页眉，放置标题-->
+								<div class="mui-card-header mui-card-media">
+									<img src="./imgs/tubiao/144.png" />
+									<div class="mui-media-body">
+										小M
+										<p>发表于 2020-05-05 15:30</p>
+									</div>
+								</div>
+								<!--内容区-->
+								<div class="mui-card-content">内容区内容区内容区内容区内容区内容区内容区内容区内容区</div>
+								<!--页脚，放置补充信息或支持的操作-->
+								<div class="mui-card-footer">浏览数666</div>
+							</div>
+						</li>
+					</ul>
+				</ul>
+			</div>
+
+			<div id="wd" class="mui-control-content">
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell">
+						<a class="mui-navigate-right" href="wd.html">
+							个人信息维护
+						</a>
+					</li>
+					<li class="mui-table-view-cell">
+						<a class="mui-navigate-right" href="sub.html">
+							学生信息维护
+						</a>
+					</li>
+				</ul>
+				<ul class="mui-table-view" style="margin-top: 25px;">
+					<li class="mui-table-view-cell">
+						<a class="mui-navigate-right" style="color: #2AC845;" onclick="qiandao();">
+							签到
+						</a>
+					</li>
+					<li class="mui-table-view-cell">
+						<a class="mui-navigate-right" style="color: #FF5053;" onclick="qiantui();">
+							签退
+						</a>
+					</li>
+				</ul>
+				<ul class="mui-table-view" style="margin-top: 25px;">
+					<li class="mui-table-view-cell">
+						<a style="text-align: center;color: #FF3B30;" onclick="tc();">
+							退出登录
+						</a>
+					</li>
+				</ul>
+			</div>
+
+		</div>
+
+	</body>
+</html>

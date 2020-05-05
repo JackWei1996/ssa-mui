@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.css" rel="stylesheet" />
+		<script src="js/app.js"></script>
+	</head>
+
+	<body>
+		<script src="js/mui.js"></script>
+		<script type="text/javascript">
+			mui.init({
+			  pullRefresh : {
+				container:"#refreshContainer",//下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+				down : {
+				  style:'circle',//必选，下拉刷新样式，目前支持原生5+ ‘circle’ 样式
+				  color:'#2BD009', //可选，默认“#2BD009” 下拉刷新控件颜色
+				  height:'50px',//可选,默认50px.下拉刷新控件的高度,
+				  range:'100px', //可选 默认100px,控件可下拉拖拽的范围
+				  offset:'0px', //可选 默认0px,下拉刷新控件的起始位置
+				  auto: true,//可选,默认false.首次加载自动上拉刷新一次
+				  callback :csh() //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+				}
+			  }
+			});
+			
+			function add0(m){return m<10?'0'+m:m }
+			function formatTime(shijianchuo){
+				//shijianchuo是整数，否则要parseInt转换
+				var time = new Date(shijianchuo);
+				var y = time.getFullYear();
+				var m = time.getMonth()+1;
+				var d = time.getDate();
+				var h = time.getHours();
+				var mm = time.getMinutes();
+				var s = time.getSeconds();
+				return y+'-'+add0(m)+'-'+add0(d);
+			}
+			
+			/*'yyyy-MM-dd'格式的字符串转日期*/
+			function stringToDate(str){
+				var dateStrs = str.split("-");
+				var year = parseInt(dateStrs[0], 10);
+				var month = parseInt(dateStrs[1], 10) - 1;
+				var day = parseInt(dateStrs[2], 10);
+				var date = new Date(year, month, day);
+				return date;
+			}
+			
+			var cid;
+			function csh(){
+				var a = localStorage.getItem("account");
+				
+				mui.ajax(ip+'/jz/sub?userId='+a,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					var uname = document.getElementById("uname");
+					var nv = document.getElementById("nv");
+					var nan = document.getElementById("nan");
+					var gmys = document.getElementById("gmys");
+					var csrq = document.getElementById("csrq");
+
+					if(data==null|| "undefined" == typeof data.name){ 
+						data.name = "";
+					}
+					if("undefined" == typeof data.food){ 
+						data.food = "";
+					}
+					if("undefined" == typeof data.birthday){ 
+						data.birthday = "";
+					}
+					
+					uname.value = data.name;
+					gmys.value = data.food;
+					csrq.value = formatTime(data.birthday);
+					cid = data.id;
+					
+					localStorage.setItem("cid", cid);
+					
+					if(data.sex==1){
+						nan.click();
+					}else{
+						nv.click();
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					mui.toast("服务器错误！");
+					return 0;
+				}
+				});
+			}
+			
+			function upWd(){
+				var a = localStorage.getItem("account");
+				
+				var uname = document.getElementById("uname").value;
+				var gmys = document.getElementById("gmys").value;
+				var csrq = document.getElementById("csrq").value;
+				var sex = getRadioValue("sexr");
+				
+				var url = "?id="+cid;
+				url += "&"+"name="+uname;
+				url += "&"+"sex="+sex;
+				url += "&"+"csrq="+csrq;
+				url += "&"+"food="+gmys;
+				
+				mui.ajax(ip+'/jz/upsub'+url,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；   
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					mui.toast("修改成功");
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					mui.toast("修改成功");
+					return 0;
+				}
+				});
+			}
+			
+			function getRadioValue(className){
+				var cks = document.getElementsByClassName(className);
+				var val = null;
+				for(i=0; i<cks.length; i++){
+					if(cks[i].checked){
+						val = cks[i].value;
+					}
+				}
+				return val;
+			}
+		</script>
+	</body>
+	
+	<header class="mui-bar mui-bar-nav">
+		<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		<h1 class="mui-title">孩子信息</h1>
+	</header>
+	
+	<div class="mui-content">
+		<form class="mui-input-group" style="margin-top: 10px;">
+			<div class="mui-input-row">
+				<label>姓名</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入姓名" id="uname">
+			</div>
+				<div class="mui-input-row mui-radio mui-left">
+				<label>女</label>
+				<input value="0" name="sex" type="radio" checked="checked" id="nv" class="sexr">
+			</div> 
+			<div class="mui-input-row mui-radio mui-left">
+				<label>男</label>
+				<input value="1" name="sex" type="radio" id="nan" class="sexr">
+			</div> 
+			<div class="mui-input-row">
+				<label>出生日期</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入出生日期" id="csrq">
+			</div>
+			<div class="mui-input-row">
+				<label>过敏因素</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入过敏因素" id="gmys">
+			</div>
+			<div class="mui-button-row">
+				<button type="button" class="mui-btn mui-btn-primary" onclick="upWd()">确认修改</button>
+			</div>
+		</form>
+	</div>
+
+</html>

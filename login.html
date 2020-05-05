@@ -1,0 +1,235 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.css" rel="stylesheet" />
+		<style>
+			.area {
+				margin: 20px auto 0px auto;
+			}
+			
+			.mui-input-group {
+				margin-top: 10px;
+			}
+			
+			.mui-input-group:first-child {
+				margin-top: 20px;
+			}
+			
+			.mui-input-group label {
+				width: 22%;
+			}
+			
+			.mui-input-row label~input,
+			.mui-input-row label~select,
+			.mui-input-row label~textarea {
+				width: 78%;
+			}
+			
+			.mui-checkbox input[type=checkbox],
+			.mui-radio input[type=radio] {
+				top: 6px;
+			}
+			
+			.mui-content-padded {
+				margin-top: 25px;
+			}
+			
+			.mui-btn {
+				padding: 10px;
+			}
+			
+			.link-area {
+				display: block;
+				margin-top: 25px;
+				text-align: center;
+			}
+			
+			.spliter {
+				color: #bbb;
+				padding: 0px 8px;
+			}
+			
+			.oauth-area {
+				position: absolute;
+				bottom: 20px;
+				left: 0px;
+				text-align: center;
+				width: 100%;
+				padding: 0px;
+				margin: 0px;
+			}
+			
+			.oauth-area .oauth-btn {
+				display: inline-block;
+				width: 50px;
+				height: 50px;
+				background-size: 30px 30px;
+				background-position: center center;
+				background-repeat: no-repeat;
+				margin: 0px 20px;
+				/*-webkit-filter: grayscale(100%); */
+				border: solid 1px #ddd;
+				border-radius: 25px;
+			}
+			
+			.oauth-area .oauth-btn:active {
+				border: solid 1px #aaa;
+			}
+			
+			.oauth-area .oauth-btn.disabled {
+				background-color: #ddd;
+			}
+		</style>
+		<script src="js/app.js"></script>
+	</head>
+
+	<body>
+		<script src="js/mui.js"></script>
+		<header class="mui-bar mui-bar-nav">
+			<h1 class="mui-title">登录</h1>
+		</header>
+		<div class="mui-content">
+			<div id="tupian" style="margin:30px 0px; text-align: center;">
+				<img src="imgs/tubiao/192.png" />
+			</div>
+			<form id='login-form' class="mui-input-group">
+				<div class="mui-input-row">
+					<label>账号</label>
+					<input id='account' type="text" class="mui-input-clear mui-input" placeholder="请输入账号">
+				</div>
+				<div class="mui-input-row">
+					<label>密码</label>
+					<input id='password' type="password" class="mui-input-clear mui-input" placeholder="请输入密码">
+				</div>
+			</form>
+			
+			<div class="mui-content-padded">
+				<button id='login' class="mui-btn mui-btn-block mui-btn-primary" onclick="login();">登录</button>
+			</div>
+			<div class="mui-content-padded oauth-area">
+
+			</div>
+		</div>
+	</body>
+	
+	<script type="text/javascript">
+		
+		mui.init({
+		  pullRefresh : {
+			container:"#refreshContainer",//下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+			down : {
+			  style:'circle',//必选，下拉刷新样式，目前支持原生5+ ‘circle’ 样式
+			  color:'#2BD009', //可选，默认“#2BD009” 下拉刷新控件颜色
+			  height:'50px',//可选,默认50px.下拉刷新控件的高度,
+			  range:'100px', //可选 默认100px,控件可下拉拖拽的范围
+			  offset:'0px', //可选 默认0px,下拉刷新控件的起始位置
+			  auto: true,//可选,默认false.首次加载自动上拉刷新一次
+			  callback :csh() //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+			}
+		  }
+		});
+		
+		function csh(){
+			var c = localStorage.getItem("account");
+			var p = localStorage.getItem("password");
+			if(c!=null && c!=""){
+				mui.openWindow({
+					url:'index.html',
+					id:'index11.html',
+                    waiting:  
+                    {  
+                        autoshow:true,  
+                        title:'loading....'  
+                    }  
+				});
+			}
+		}
+		
+		mui.plusReady(function() {
+			var c = localStorage.getItem("account");
+			var p = localStorage.getItem("password");
+			if(c!=null && c!=""){
+				mui.openWindow({
+					url:'index.html',
+					id:'index11.html',
+			        waiting:  
+			        {  
+			            autoshow:true,  
+			            title:'loading....'  
+			        }  
+				});
+			}
+			var dl = 0;
+			//登录
+			document.getElementById("login").addEventListener('tap',function(e){
+				dl = login();
+				remPwd();
+			});
+			
+			if(dl == 1){
+				//记录session
+				var account = document.getElementById("account").value;
+				plus.storage.setItem('account', 'account');
+				var account = plus.storage.getItem('account');
+			}
+			
+		});
+		
+		function login(){
+			var account = document.getElementById("account").value;
+			var pwd = document.getElementById("password").value;
+			
+			if(account==null||account==""){
+				mui.alert('请输入账号名','警告','确定',function (e) {
+				},'div');
+				return 0;
+			}else if(pwd==null||pwd==""){
+				mui.alert('请输入密码','警告','确定',function (e) {
+				},'div');
+				return 0;
+			}else{
+				mui.ajax(ip+'/login',{
+					data:{
+						username:account,
+						password:pwd
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'get',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					// headers:{'Content-Type':'application/json'},	     
+					headers:{'Content-Type':'application/x-www-form-urlencoded'},
+					success:function(data){
+						//服务器返回响应，根据响应结果，分析是否登录成功；
+						if(data.result=="success"){
+							remPwd();
+							mui.openWindow({
+								url:'index.html',
+								id:'index22.html'
+							});
+						}else{
+							mui.toast("账户名密码错误！");
+						}
+						
+						return 1;
+					},
+					error:function(xhr,type,errorThrown){
+						//异常处理；
+						mui.toast("欢迎登陆");
+						return 0;
+					}
+				});
+			}
+		}
+		
+		function remPwd() {
+			var id = document.getElementById("account").value;
+			var pwd = document.getElementById("password").value;
+			localStorage.setItem("account", id);
+			localStorage.setItem("password", pwd);
+        }
+	</script>
+</html>
