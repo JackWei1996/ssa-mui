@@ -79,47 +79,50 @@
 			function csh(){
 				var a = localStorage.getItem("account");
 				
-				mui.ajax(ip+'/jz/wd?userId='+a,{
+				mui.ajax(ip+'/user/getInfo?name='+a,{
 				dataType:'json',//服务器返回json格式数据
 				type:'get',//HTTP请求类型
 				timeout:10000,//超时时间设置为10秒；
 				headers:{'Content-Type':'application/x-www-form-urlencoded'},
 				success:function(data){
 					var uname = document.getElementById("uname");
-					var nv = document.getElementById("nv");
-					var nan = document.getElementById("nan");
+					var imgSrc = document.getElementById("img_src");
+					var age = document.getElementById("age");
 					var tel = document.getElementById("tel");
-					var csrq = document.getElementById("csrq");
-					var dz = document.getElementById("dz");
-					var sfz = document.getElementById("sfz");
+					var province = document.getElementById("tz");
+					var city = document.getElementById("sg");
+					var address = document.getElementById("dz");
 					
-					if("undefined" == typeof data.userName){ 
-						data.userName = "";
+					if("undefined" == typeof data.name){ 
+						data.name = "";
 					}
-					if("undefined" == typeof data.userTel){ 
-						data.userTel = "";
+					if("undefined" == typeof data.img){ 
+						data.img = "";
 					}
-					if("undefined" == typeof data.userBirthday){ 
-						data.userBirthday = "";
+					if("undefined" == typeof data.age){
+						data.age = "";
 					}
-					if("undefined" == typeof data.userAddress){ 
-						data.userAddress = "";
+					if("undefined" == typeof data.phone){ 
+						data.phone = "";
 					}
-					if("undefined" == typeof data.userIdcard){ 
-						data.userIdcard = "";
+					if("undefined" == typeof data.province){ 
+						data.province = "";
+					}
+					if("undefined" == typeof data.city){ 
+						data.city = "";
+					}
+					if("undefined" == typeof data.address){
+						data.address = "";
 					}
 					
-					uname.value = data.userName;
-					tel.value = data.userTel;
-					csrq.value = formatTime(data.userBirthday);
-					dz.value = data.userAddress;
-					sfz.value = data.userIdcard;
+					uname.value = data.name;
+					tel.value = data.phone;
+					imgSrc.src = ip+"/file/"+data.img+".png";
+					age.value = data.age;
+					province.value = data.province;
+					city.value = data.city;
+					address.value = data.address;
 
-					if(data.userSex==1){
-						nan.click();
-					}else{
-						nv.click();
-					}
 				},
 				error:function(xhr,type,errorThrown){
 					//异常处理；
@@ -132,22 +135,32 @@
 			function upWd(){
 				var a = localStorage.getItem("account");
 				
-				var uname = document.getElementById("uname").value;
-				var tel = document.getElementById("tel").value;
-				var csrq = document.getElementById("csrq").value;
-				var dz = document.getElementById("dz").value;
-				var sfz = document.getElementById("sfz").value;
-				var sex = getRadioValue("sexr");
+				var uname = document.getElementById("uname");
+				var imgSrc = document.getElementById("img_src").value;
+				var age = document.getElementById("age");
+				var tel = document.getElementById("tel");
+				var province = document.getElementById("tz");
+				var city = document.getElementById("sg");
+				var address = document.getElementById("address");
+				var str = '';
+				if(!"undefined" == typeof data.age){
+					str = imgSrc.src.split("file")[1].split("png")[0];
+					str = str.substring(1, str.length -1);
+					console.log(str);
+				}
 				
-				var url = "?userId="+a;
-				url += "&"+"userName="+uname;
-				url += "&"+"userTel="+tel;
-				url += "&"+"csrq="+csrq;
-				url += "&"+"userAddress="+dz;
-				url += "&"+"userIdcard="+sfz;
-				url += "&"+"userSex="+sex;
 				
-				mui.ajax(ip+'/jz/upwd'+url,{
+				var url = "?";
+				url += "&"+"name="+uname;
+				url += "&"+"phone="+tel;
+				url += "&"+"img="+str;
+				url += "&"+"age="+age;
+				url += "&"+"province="+province;
+				url += "&"+"city="+city;
+				url += "&"+"address="+address;
+				
+				
+				mui.ajax(ip+'/user/updateUser'+url,{
 				dataType:'json',//服务器返回json格式数据
 				type:'get',//HTTP请求类型
 				timeout:10000,//超时时间设置为10秒；   
@@ -375,16 +388,12 @@
 			</div>
 			<div class="mui-input-row">
 				<label>姓名</label>
-				<input type="text" class="mui-input-clear" placeholder="请输入姓名" id="uname">
+				<input type="text" class="mui-input-clear" placeholder="请输入姓名" id="uname" disabled="disabled">
 			</div>
-			<div class="mui-input-row mui-radio mui-left">
-				<label>女</label>
-				<input value="0" name="sex" type="radio" checked="checked" id="nv" class="sexr">
-			</div> 
-			<div class="mui-input-row mui-radio mui-left">
-				<label>男</label>
-				<input value="1" name="sex" type="radio" id="nan" class="sexr">
-			</div> 
+			<div class="mui-input-row">
+				<label>年龄</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入年龄" id="age">
+			</div>
 			<div class="mui-input-row">
 				<label>电话</label>
 				<input type="text" class="mui-input-clear" placeholder="请输入电话" id="tel">
@@ -394,8 +403,12 @@
 				<input type="text" class="mui-input-clear" placeholder="请输入地址" id="dz">
 			</div>
 			<div class="mui-input-row">
-				<label>身份证号</label>
-				<input type="text" class="mui-input-clear" placeholder="请输入地址" id="sfz">
+				<label>体重</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入体重" id="tz">
+			</div>
+			<div class="mui-input-row">
+				<label>身高</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入身高" id="sg">
 			</div>
 			<div class="mui-button-row">
 				<button type="button" class="mui-btn mui-btn-primary" onclick="upWd();">确认修改</button>
