@@ -134,24 +134,20 @@
 			
 			function upWd(){
 				var a = localStorage.getItem("account");
-				
-				var uname = document.getElementById("uname");
-				var imgSrc = document.getElementById("img_src").value;
-				var age = document.getElementById("age");
-				var tel = document.getElementById("tel");
-				var province = document.getElementById("tz");
-				var city = document.getElementById("sg");
-				var address = document.getElementById("address");
+				console.log("修改个人信息")
+				var imgSrc = document.getElementById("img_src");
+				var age = document.getElementById("age").value;
+				var tel = document.getElementById("tel").value;
+				var province = document.getElementById("tz").value;
+				var city = document.getElementById("sg").value;
+				var address = document.getElementById("dz").value;
 				var str = '';
-				if(!"undefined" == typeof data.age){
-					str = imgSrc.src.split("file")[1].split("png")[0];
-					str = str.substring(1, str.length -1);
-					console.log(str);
-				}
-				
-				
-				var url = "?";
-				url += "&"+"name="+uname;
+				console.log(imgSrc.src);
+				str = imgSrc.src.split("file")[1].split("png")[0];
+				str = str.substring(1, str.length -1);
+				console.log(str);
+
+				var url = "?name="+a;
 				url += "&"+"phone="+tel;
 				url += "&"+"img="+str;
 				url += "&"+"age="+age;
@@ -159,7 +155,7 @@
 				url += "&"+"city="+city;
 				url += "&"+"address="+address;
 				
-				
+				console.log(url)
 				mui.ajax(ip+'/user/updateUser'+url,{
 				dataType:'json',//服务器返回json格式数据
 				type:'get',//HTTP请求类型

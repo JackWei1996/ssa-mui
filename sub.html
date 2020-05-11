@@ -52,42 +52,32 @@
 			
 			var cid;
 			function csh(){
-				var a = localStorage.getItem("account");
+				var userId = localStorage.getItem("userId");
 				
-				mui.ajax(ip+'/jz/sub?userId='+a,{
+				mui.ajax(ip+'/feedback/getAllByLimit?userId='+userId,{
 				dataType:'json',//服务器返回json格式数据
 				type:'get',//HTTP请求类型
 				timeout:10000,//超时时间设置为10秒；
 				headers:{'Content-Type':'application/x-www-form-urlencoded'},
 				success:function(data){
-					var uname = document.getElementById("uname");
-					var nv = document.getElementById("nv");
-					var nan = document.getElementById("nan");
-					var gmys = document.getElementById("gmys");
-					var csrq = document.getElementById("csrq");
-
-					if(data==null|| "undefined" == typeof data.name){ 
-						data.name = "";
-					}
-					if("undefined" == typeof data.food){ 
-						data.food = "";
-					}
-					if("undefined" == typeof data.birthday){ 
-						data.birthday = "";
+					console.log(data)
+					var html ='';
+					var nt = document.getElementById("ts");
+					for(var i=0; i<data.rows.length; i++){
+						console.log(data.rows[i].feedback);
+						
+						var c = " mui-badge-success";
+						if(!data.rows[i].reply || "null"==data.rows[i].reply){
+							data.rows[i].reply = '等待反馈';
+							c ='';
+						}
+						html+=' <li class="mui-table-view-cell">'+data.rows[i].feedback+
+								'<span class="mui-badge'+c+'">'+data.rows[i].reply+'</span> '+
+							'</li>';
 					}
 					
-					uname.value = data.name;
-					gmys.value = data.food;
-					csrq.value = formatTime(data.birthday);
-					cid = data.id;
-					
-					localStorage.setItem("cid", cid);
-					
-					if(data.sex==1){
-						nan.click();
-					}else{
-						nv.click();
-					}
+					nt.innerHTML = html;
+					console.log(html)
 				},
 				error:function(xhr,type,errorThrown){
 					//异常处理；
@@ -97,80 +87,64 @@
 				});
 			}
 			
-			function upWd(){
-				var a = localStorage.getItem("account");
-				
-				var uname = document.getElementById("uname").value;
-				var gmys = document.getElementById("gmys").value;
-				var csrq = document.getElementById("csrq").value;
-				var sex = getRadioValue("sexr");
-				
-				var url = "?id="+cid;
-				url += "&"+"name="+uname;
-				url += "&"+"sex="+sex;
-				url += "&"+"csrq="+csrq;
-				url += "&"+"food="+gmys;
-				
-				mui.ajax(ip+'/jz/upsub'+url,{
+			function tj(){
+				var userId = localStorage.getItem("userId");
+				var msg = document.getElementById("fknr");
+				console.log("评论提交")
+				mui.ajax(ip+'/feedback/doAdd?userId='+userId+'&feedback='+msg.value,{
 				dataType:'json',//服务器返回json格式数据
-				type:'get',//HTTP请求类型
+				type:'post',//HTTP请求类型
 				timeout:10000,//超时时间设置为10秒；   
 				headers:{'Content-Type':'application/x-www-form-urlencoded'},
 				success:function(data){
-					mui.toast("修改成功");
+					console.log(data)
+					if(data == "SUCCESS"){
+						mui.toast("反馈成功");
+						var nt = document.getElementById("ts");
+						var html = nt.innerHTML;
+						console.log(html)
+						var f1 = ' <li class="mui-table-view-cell">Item 3 '+
+								'	<span class="mui-badge">33</span>'+
+								'</li>';
+						html = f1 +' <li class="mui-table-view-cell">'+msg.value.trim()+
+									'<span class="mui-badge">等待反馈'+'</span> '+
+								'</li>'+html;
+						nt.innerHTML = html;
+					}
 				},
 				error:function(xhr,type,errorThrown){
-					//异常处理；
-					mui.toast("修改成功");
-					return 0;
+					mui.toast("反馈成功");
+					var nt = document.getElementById("ts");
+					var html = nt.innerHTML;
+					var f1 = ' <li class="mui-table-view-cell">Item 3 '+
+							'	<span class="mui-badge">33</span>'+
+							'</li>';
+					html = f1 +' <li class="mui-table-view-cell"> '+msg.value.trim()+
+							'    <span class="mui-badge">等待反馈'+'</span> '+
+						'</li>'+html;
+					console.log(html)
+					nt.innerHTML = html;
 				}
 				});
 			}
 			
-			function getRadioValue(className){
-				var cks = document.getElementsByClassName(className);
-				var val = null;
-				for(i=0; i<cks.length; i++){
-					if(cks[i].checked){
-						val = cks[i].value;
-					}
-				}
-				return val;
-			}
 		</script>
 	</body>
 	
 	<header class="mui-bar mui-bar-nav">
 		<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
-		<h1 class="mui-title">孩子信息</h1>
+		<h1 class="mui-title">投诉反馈</h1>
 	</header>
 	
-	<div class="mui-content">
-		<form class="mui-input-group" style="margin-top: 10px;">
-			<div class="mui-input-row">
-				<label>姓名</label>
-				<input type="text" class="mui-input-clear" placeholder="请输入姓名" id="uname">
-			</div>
-				<div class="mui-input-row mui-radio mui-left">
-				<label>女</label>
-				<input value="0" name="sex" type="radio" checked="checked" id="nv" class="sexr">
-			</div> 
-			<div class="mui-input-row mui-radio mui-left">
-				<label>男</label>
-				<input value="1" name="sex" type="radio" id="nan" class="sexr">
-			</div> 
-			<div class="mui-input-row">
-				<label>出生日期</label>
-				<input type="text" class="mui-input-clear" placeholder="请输入出生日期" id="csrq">
-			</div>
-			<div class="mui-input-row">
-				<label>过敏因素</label>
-				<input type="text" class="mui-input-clear" placeholder="请输入过敏因素" id="gmys">
-			</div>
-			<div class="mui-button-row">
-				<button type="button" class="mui-btn mui-btn-primary" onclick="upWd()">确认修改</button>
-			</div>
-		</form>
+	<ul class="mui-table-view" >
+		<ul class="mui-table-view" id="ts">
+
+		</ul>
+	</ul>
+	<div  style="text-align: center;">
+		<textarea rows="3" cols="20" placeholder="反馈内容" id="fknr">
+		</textarea>
+		<button type="button" class="mui-btn mui-btn-primary mui-btn-outlined" onclick="tj()">提交反馈</button>
 	</div>
 
 </html>
