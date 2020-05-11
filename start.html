@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>运动打卡</title>
+		<script src="js/mui.min.js"></script>
+		<script src="js/jquery-3.5.1.min.js"></script>
+		<script src="js/app.js"></script>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<script type="text/javascript" src="http://api.map.baidu.com/api?v=3.0&ak=CTItIOB2FdSFsDlRRmh6irRFhVgnqKqb"></script>
+		<style type="text/css">
+			body,
+			html,
+			#map {
+				width: 100%;
+				height: 80%;
+				overflow: hidden;
+				font-family: "微软雅黑";
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">定位打卡</h1>
+		</header>
+
+		<div id="map"></div>
+		<input type="text" id="address" />
+		<div class="mui-input-group">
+			<div class="mui-input-row">
+				<label>选择类型</label>
+				<a class="mui-navigate-right">
+					<span class="mui-badge1">
+					<select class="mui-h5" style="margin:auto; color:#000;">
+						<option value="1">跑步</option>
+						<option value="2">骑行</option>
+						<option value="3">步行</option>
+					</select>
+					</span> 
+				</a>
+			</div>
+		</div>
+		<button type="button" id="dingwei" style="width: 100%;bottom: 1.125rem;" class="mui-btn mui-btn-primary mui-btn-outlined">开始打卡</button>
+	</body>
+	<script type="text/javascript" charset="utf-8">
+		mui.init();
+		var map = new BMap.Map("map"); //地图显示位置
+		var gc = new BMap.Geocoder(); //将坐标转换成地址
+		//页面初始化时
+		$(function() {
+			//初始化地图 默认加载北京天安门
+			var point = new BMap.Point(116.40369689697, 39.914934528088);
+			map.centerAndZoom(point, 16); //初始化地图，point为中心点，缩放级别为16
+			$("#address").val("开始地点+时间");
+		})
+
+		//监听定位按钮事件
+		$("#dingwei").click(function() {
+			//调用定位函数
+			getLocation();
+		})
+
+		function getLocation() {
+			//判断手机浏览器是否支持定位 
+			if(navigator.geolocation) {
+				var geolocation = new BMap.Geolocation(); //创建定位实例
+				geolocation.getCurrentPosition(showPosition, {
+					enableHighAccuracy: true
+				}); //enableHighAccuracy 要求浏览器获取最佳结果
+			} else {
+				console.log("不支持定位啦")
+				map.addControl(new BMap.GeolocationControl()); //添加定位控件 支持定位
+			}
+		}
+
+		//获取定位信息
+		function showPosition(position) {
+			var la = position.latitude;
+			var lo = position.longitude;
+
+			//新建中心点 并将地图中心移动过去
+			var centerPoint = new BMap.Point(lo, la);
+			map.panTo(centerPoint);
+			map.setCenter(centerPoint);
+			gc.getLocation(centerPoint, function(rs) {
+				var addComp = rs.addressComponents;
+				var mapAddress = addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+				var now = new Date();
+				var tm = now.getFullYear()+"-"+(now.getMonth()+1)+"-"+now.getDate()+" "+now.getHours()+":"+now.getMinutes()+":"+now.getSeconds();
+				$("#address").val(mapAddress + "  开始时间 "+tm);
+				save(la, lo, tm);
+			});
+			//新建标注
+			var mk = new BMap.Marker(centerPoint);
+//			mk.disableDragging(); // 不可拖拽
+			map.addOverlay(mk);
+		}
+		
+		function save(la, lo, tm){
+			var userId = localStorage.getItem("userId");
+			mui.ajax(ip+'/clockin/doAdd?userId='+userId+"&startLng="+lo+"&startLat="+la,{
+			dataType:'json',//服务器返回json格式数据
+			type:'get',//HTTP请求类型
+			timeout:10000,//超时时间设置为10秒；
+			headers:{'Content-Type':'application/x-www-form-urlencoded'},
+			success:function(data){
+				mui.toast("打卡成功！");
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast("打卡成功！");
+			}
+			});
+		}
+	</script>
+
+</html>

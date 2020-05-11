@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.css" rel="stylesheet" />
+		<script src="js/app.js"></script>
+		<script src="js/jquery.min.js"></script>
+		<meta http-equiv="X-UA-Compatible" content="chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+		<!-- <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen"> -->
+		<link rel="stylesheet" type="text/css" href="css/print.css" media="print">
+		<link rel="stylesheet" type="text/css" href="css/simple-calendar.css">
+		<script src="js/mui.js"></script>
+	</head>
+<style>
+  #calendar{
+	width: 100%
+  }
+  .clearfix{
+	margin-bottom: 50px !important;
+  }
+</style>
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">打卡日历</h1>
+		</header>
+		<div class="inner clearfix" style="top: 6.25rem;">
+		  <div id = 'calendar'>
+		
+		  </div>
+		</div>
+	</body>
+	
+	<script type="text/javascript" src="js/simple-calendar-es6.js"></script>
+	 <script type="text/javascript">
+	 var objMsg = new Array();
+	 var harr = [];
+	 var idata = "data_2020";//看本地js有没有这一年的假期
+	 var iyear = 2020;
+	 var oldyear = SimpleCalendar.prototype.languageData.vocation;
+	 
+	 while(oldyear[idata]){
+	 	iyear++;
+	 	idata = idata.substring(0, 5);
+	 	idata += iyear;
+	 } 
+	 
+	 
+	
+	 getMessage();
+	 //获取这个人的所有信息
+	 function getMessage(){
+		var mark = {};
+		var userId = localStorage.getItem("userId");
+	 	var htext = "";
+	 	var hr;
+		mui.ajax(ip+'/clockin/getAllByLimit?userId='+userId,{
+		dataType:'json',//服务器返回json格式数据
+		type:'get',//HTTP请求类型
+		async: false,  
+		timeout:10000,//超时时间设置为10秒；   
+		headers:{'Content-Type':'application/x-www-form-urlencoded'},
+		success:function(data){
+			if(data.rows && data.rows.length>0){
+				for (var i = 0; i < data.rows.length; i++) {
+				   var time = getDate(data.rows[i].startTime.substring(0,10));
+				   mark[time] = '打卡成功';
+				 }
+			}
+			console.log()
+		}
+		});
+		
+		console.log(mark)
+		var options = {mark};
+		var myCalendar = new SimpleCalendar('#calendar', options);
+	 }
+	 
+	 //根据数据库里面时间进行去前面的0
+	 //如2018/09/02转换成2018-9-2
+	 function getDate(date){
+	 	var tt = date.split("\/");
+	 	var time = tt[0];
+	 	if(tt[1].indexOf("0")==0){
+	 		time+="-"+tt[1][1];
+	 	}else{
+	 		time+="-"+tt[1];
+	 	}
+	 	if(tt[2].indexOf("0")==0){
+	 		time+="-"+tt[2][1];
+	 	}else{
+	 		time+="-"+tt[2];
+	 	}
+	 	return time;
+	 }
+	 </script>
+	
+</html>

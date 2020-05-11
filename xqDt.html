@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.css" rel="stylesheet" />
+		<script src="js/app.js"></script>
+	</head>
+
+	<body>
+		<script src="js/mui.js"></script>
+		<script type="text/javascript">
+			var did = 1;
+			mui.init();
+			mui.plusReady(function () {
+			    var data = plus.webview.currentWebview();
+				var t = mui('#title');
+				var c = mui('#content');
+				var headImg = document.getElementById('img_src');
+				var vc = mui('#view');
+				var dynamicId = data.dynamicId;
+				did = dynamicId;
+				initPinlun(dynamicId);
+
+				t[0].innerHTML = data.title+'<p>发表于 '+data.shijian+'</p>';
+				c[0].innerHTML = data.content;
+				
+				headImg.src = data.headImg.trim();
+				console.log(headImg.src);
+				console.log(dynamicId);
+				
+				vc[0].innerHTML = "查看次数 :"+data.vc;
+				
+			})
+			
+			function initPinlun(dynamicId){
+				
+				console.log("初始化评论")
+				mui.ajax(ip+'/dynamicComment/getAllByLimit?dynamicId='+dynamicId,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；   
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					var nt = document.getElementById("pl");
+					var html = "";
+					console.log(data)
+					for (i=0; i<data.rows.length; i++) {
+						html += '<li>'+data.rows[i].msg+'</li>';
+					}
+					nt.innerHTML = html;
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					mui.toast("服务器错误！");
+					return 0;
+				}
+				});
+			}
+			
+			function tj(){
+				var userId = localStorage.getItem("userId");
+				var msg = document.getElementById("plnr");
+				console.log("评论提交")
+				mui.ajax(ip+'/dynamicComment/doAdd?dynamicId='+did+'&userId='+userId+'&msg='+msg.value,{
+				dataType:'json',//服务器返回json格式数据
+				type:'post',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；   
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					console.log(data)
+					if(data == "SUCCESS"){
+						mui.toast("评论成功");
+						var nt = document.getElementById("pl");
+						var html = nt.innerHTML;
+						html = '<li>'+msg.value+'</li>'+html;
+						nt.innerHTML = html;
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					mui.toast("评论成功");
+					var nt = document.getElementById("pl");
+					var html = nt.innerHTML;
+					html = '<li>'+msg.value+'</li>'+html;
+					nt.innerHTML = html;
+				}
+				});
+			}
+			
+		</script>
+		
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">详情</h1>
+		</header>
+		
+		<div class="mui-card" style="top: 3.125rem;">
+			<!--页眉，放置标题-->
+			<div class="mui-card-header">
+				<div class="mui-card-header mui-card-media">
+					<img src="" id="img_src" />
+					<div class="mui-media-body" id="title">
+					</div>
+				</div>
+			</div>
+			<!--内容区-->
+			<div class="mui-card-content" id="content"></div>
+			<!--页脚，放置补充信息或支持的操作-->
+			<div class="mui-card-footer" id="view"></div>
+			<div class="mui-card-content">
+				<ul  id="pl">
+					
+				</ul>
+			</div>
+			<div  style="text-align: center;">
+				<textarea rows="3" cols="20" placeholder="评论内容" id="plnr">
+				</textarea>
+				<button type="button" class="mui-btn mui-btn-primary mui-btn-outlined" onclick="tj()">提交评论</button>
+			</div>
+		</div>
+		
+	
+	</body>
+</html>
