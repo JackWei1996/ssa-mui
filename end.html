@@ -76,8 +76,10 @@
 			gc.getLocation(centerPoint, function(rs) {
 				var addComp = rs.addressComponents;
 				var mapAddress = addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+				var now = new Date();
 				var tm = now.getFullYear()+"-"+(now.getMonth()+1)+"-"+now.getDate()+" "+now.getHours()+":"+now.getMinutes()+":"+now.getSeconds();
 				$("#address").val(mapAddress + "  结束时间 "+tm);
+				save(la, lo, tm);
 			});
 			//新建标注
 			var mk = new BMap.Marker(centerPoint);
@@ -86,6 +88,7 @@
 		}
 		
 		function save(la, lo, tm){
+			console.log("打开成功===");
 			var userId = localStorage.getItem("userId");
 			mui.ajax(ip+'/clockin/update?userId='+userId+"&endLng="+lo+"&endLat="+la,{
 			dataType:'json',//服务器返回json格式数据

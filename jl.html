@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.css" rel="stylesheet" />
+		<script src="js/app.js"></script>
+	</head>
+
+	<body>
+		<script src="js/mui.js"></script>
+		<script type="text/javascript">
+			mui.init({
+			  pullRefresh : {
+				container:"#refreshContainer",//下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+				down : {
+				  style:'circle',//必选，下拉刷新样式，目前支持原生5+ ‘circle’ 样式
+				  color:'#2BD009', //可选，默认“#2BD009” 下拉刷新控件颜色
+				  height:'50px',//可选,默认50px.下拉刷新控件的高度,
+				  range:'100px', //可选 默认100px,控件可下拉拖拽的范围
+				  offset:'0px', //可选 默认0px,下拉刷新控件的起始位置
+				  auto: true,//可选,默认false.首次加载自动上拉刷新一次
+				  callback :getInfo() //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+				}
+			  }
+			});
+			mui.plusReady(function () {
+				getInfo();
+			});
+			function getInfo(){
+				var userId = localStorage.getItem("userId");
+				mui.ajax(ip+'/clockin/getAllByLimit?userId='+userId,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/x-www-form-urlencoded'},
+				success:function(data){
+					console.log(data);
+					var jilu = document.getElementById("jilu");
+					var html = "";
+					for(var i=0; i<data.rows.length; i++){
+						html+=' <li class="mui-table-view-cell">'+data.rows[i].startTime+
+								' <span class="mui-badge mui-badge-success">'+data.rows[i].distance+'米</span>'+
+							' </li>';
+					}
+					jilu.innerHTML = html;
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					mui.toast("服务器错误！");
+					return 0;
+				}
+				});
+			}
+		</script>
+		
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">打卡记录</h1>
+		</header>
+		
+		<div class="mui-content">
+			<ul class="mui-table-view" id="jilu">
+			    <li class="mui-table-view-cell">2020/5/5
+			        <span class="mui-badge mui-badge-success">100米</span>
+			    </li>
+			</ul>
+		</div>
+	</body>
+</html>
