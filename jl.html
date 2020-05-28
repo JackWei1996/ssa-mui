@@ -41,8 +41,12 @@
 					var jilu = document.getElementById("jilu");
 					var html = "";
 					for(var i=0; i<data.rows.length; i++){
+						var distance = 0;
+						if(null != data.rows[i].distance){
+							distance = data.rows[i].distance;
+						}
 						html+=' <li class="mui-table-view-cell">'+data.rows[i].startTime+
-								' <span class="mui-badge mui-badge-success">'+data.rows[i].distance+'米</span>'+
+								' <span class="mui-badge mui-badge-success">'+distance+'米</span>'+
 							' </li>';
 					}
 					jilu.innerHTML = html;
